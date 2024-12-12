@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id "io.netifi.flatbuffers" version "1.0.7"
+}
+
+group = 'com.vorono4ka'
+version = project.version
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url = uri("https://maven.pkg.github.com/danila-schelkov/*")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+        }
+    }
+}
+
+dependencies {
+    implementation "com.google.flatbuffers:flatbuffers-java:${project.flatbuffers_version}"
+    implementation "org.slf4j:slf4j-simple:${project.slf4j_version}"
+    implementation "com.vorono4ka:sc-file:${project.sc_file_version}"
+    implementation "com.vorono4ka:supercell-swf:${project.supercell_swf_version}"
+}
+
+import io.netifi.flatbuffers.plugin.tasks.FlatBuffers
+
+flatbuffers {
+    flatcPath = project.findProperty("flatc.path") ?: System.getenv("FLATC_PATH")
+    language = 'java'
+}
+
+tasks.register('createFlatBuffers', FlatBuffers) {
+    inputDir = file("src/main/flatbuffers")
+    outputDir = file("src/generated/flatbuffers")
+    language = 'java'
+}
+
+compileJava.dependsOn createFlatBuffers
