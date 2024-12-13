@@ -53,6 +53,37 @@ public class SupercellSWF {
     private String filename;
     private Path path;
 
+    public static SupercellSWF createEmpty() {
+        SupercellSWF swf = new SupercellSWF();
+
+        swf.exports = new ArrayList<>();
+        swf.textures = new ArrayList<>();
+        swf.shapes = new ArrayList<>();
+        swf.movieClips = new ArrayList<>();
+        swf.textFields = new ArrayList<>();
+        swf.movieClipModifiers = new ArrayList<>();
+
+        swf.addMatrixBank(new ScMatrixBank());
+
+        return swf;
+    }
+
+    public void build() {
+        int idCounter = 0;
+        for (ShapeOriginal shape : shapes) {
+            shape.setId(++idCounter);
+        }
+        for (TextFieldOriginal textFieldOriginal : textFields) {
+            textFieldOriginal.setId(++idCounter);
+        }
+        for (MovieClipModifierOriginal modifier : movieClipModifiers) {
+            modifier.setId(++idCounter);
+        }
+        for (MovieClipOriginal movieClip : movieClips) {
+            movieClip.setId(++idCounter);
+        }
+    }
+
     public boolean load(String filepath, String filename) throws LoadingFaultException, UnableToFindObjectException, UnsupportedCustomPropertyException, TextureFileNotFound {
         this.filename = filename;
         this.path = Path.of(filepath);
@@ -251,8 +282,7 @@ public class SupercellSWF {
         int matrixCount = stream.readShort();
         int colorTransformCount = stream.readShort();
 
-        ScMatrixBank matrixBank = new ScMatrixBank();
-        matrixBank.init(matrixCount, colorTransformCount);
+        ScMatrixBank matrixBank = new ScMatrixBank(matrixCount, colorTransformCount);
         this.addMatrixBank(matrixBank);
 
         stream.skip(5);
@@ -449,8 +479,7 @@ public class SupercellSWF {
                     int matrixCount = stream.readShort();
                     int colorTransformCount = stream.readShort();
 
-                    matrixBank = new ScMatrixBank();
-                    matrixBank.init(matrixCount, colorTransformCount);
+                    matrixBank = new ScMatrixBank(matrixCount, colorTransformCount);
                     this.matrixBanks.add(matrixBank);
 
                     loadedMatrices = 0;
@@ -622,5 +651,35 @@ public class SupercellSWF {
 
     private static boolean doesFileExist(String path) {
         return Files.exists(Path.of(path));
+    }
+
+    public List<Export> getExports() {
+        return exports;
+    }
+
+    public void addTexture(SWFTexture texture) {
+        this.textures.add(texture);
+    }
+
+    public void addObject(DisplayObjectOriginal objectOriginal) {
+        if (objectOriginal instanceof MovieClipOriginal movieClipOriginal) {
+            this.movieClips.add(movieClipOriginal);
+        } else if (objectOriginal instanceof ShapeOriginal shapeOriginal) {
+            this.shapes.add(shapeOriginal);
+        } else if (objectOriginal instanceof TextFieldOriginal textFieldOriginal) {
+            this.textFields.add(textFieldOriginal);
+        } else if (objectOriginal instanceof MovieClipModifierOriginal movieClipModifierOriginal) {
+            this.movieClipModifiers.add(movieClipModifierOriginal);
+        } else {
+            throw new RuntimeException("Object not recognized: " + objectOriginal);
+        }
+    }
+
+    public void addExport(int movieClipId, String name) {
+        this.exports.add(new Export(movieClipId, name));
+    }
+
+    public int getMatrixBankCount() {
+        return this.matrixBanks.size();
     }
 }

@@ -1,10 +1,13 @@
 package com.vorono4ka;
 
+import com.vorono4ka.swf.Export;
 import com.vorono4ka.swf.SupercellSWF;
 import com.vorono4ka.swf.exceptions.LoadingFaultException;
 import com.vorono4ka.swf.exceptions.TextureFileNotFound;
 import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
 import com.vorono4ka.swf.exceptions.UnsupportedCustomPropertyException;
+import com.vorono4ka.swf.movieclips.MovieClipOriginal;
+import com.vorono4ka.swf.textures.SWFTexture;
 
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
@@ -21,29 +24,41 @@ public class Main {
         Pattern pattern = Pattern.compile(".*shelly.*");
 
         Predicate<String> matcher = pattern.asPredicate();
-        System.out.println(matcher.test("emoji_shelly_blahblah"));
 
         Stream<Path> scFiles = Files.list(Paths.get("sc"));
-        scFiles.filter((path -> path.toFile().isFile())).forEach(path -> {
-            String filepath = path.toString();
+        scFiles.filter((path -> path.toFile().isFile())).map(Path::toString).forEach(filepath -> {
             String basename = filepath.substring(filepath.indexOf('\\') + 1, filepath.lastIndexOf('.'));
 
             SupercellSWF swf = getSupercellSWF(filepath);
+            SwfReassambler reassambler = new SwfReassambler();
+            for (Export export : swf.getExports()) {
+                if (!matcher.test(export.name())) {
+                    continue;
+                }
 
-            SupercellSWF reassembledSwf = new SupercellSWF();
+                MovieClipOriginal movieClip;
+                try {
+                    movieClip = swf.getOriginalMovieClip(export.id(), export.name());
+                } catch (UnableToFindObjectException e) {
+                    throw new RuntimeException(e);
+                }
 
+                reassambler.addMovieClip(movieClip, swf);
+                reassambler.addExport(export.id(), export.name());
+            }
 
-//            for (int i = 0; i < swf.getTextureCount(); i++) {
-//                SWFTexture texture = swf.getTexture(i);
-//                byte[] textureCompressed = Zstandard.compress(texture.getKtxData());
-//                try {
-//                    Files.write(Paths.get(basename + "_" + i + ".zktx"), textureCompressed);
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
+            SupercellSWF reassambledSwf = reassambler.getSwf();
+            if (reassambledSwf.getExports().isEmpty()) {
+                return;
+            }
 
-            reassembledSwf.save("sc/patched/" + basename + ".sc", Main::setProgress);
+            for (int i = 0; i < swf.getTextureCount(); i++) {
+                SWFTexture texture = swf.getTexture(i);
+                reassambledSwf.addTexture(texture);
+            }
+
+            System.out.println(reassambledSwf.getExports());
+            reassambledSwf.save("sc/patched/" + basename + ".sc", Main::setProgress);
         });
     }
 
