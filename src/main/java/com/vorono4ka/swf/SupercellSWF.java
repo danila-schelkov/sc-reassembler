@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class SupercellSWF {
@@ -66,22 +67,6 @@ public class SupercellSWF {
         swf.addMatrixBank(new ScMatrixBank());
 
         return swf;
-    }
-
-    public void build() {
-        int idCounter = 0;
-        for (ShapeOriginal shape : shapes) {
-            shape.setId(++idCounter);
-        }
-        for (TextFieldOriginal textFieldOriginal : textFields) {
-            textFieldOriginal.setId(++idCounter);
-        }
-        for (MovieClipModifierOriginal modifier : movieClipModifiers) {
-            modifier.setId(++idCounter);
-        }
-        for (MovieClipOriginal movieClip : movieClips) {
-            movieClip.setId(++idCounter);
-        }
     }
 
     public boolean load(String filepath, String filename) throws LoadingFaultException, UnableToFindObjectException, UnsupportedCustomPropertyException, TextureFileNotFound {
@@ -661,7 +646,10 @@ public class SupercellSWF {
         this.textures.add(texture);
     }
 
-    public void addObject(DisplayObjectOriginal objectOriginal) {
+    public int addObject(DisplayObjectOriginal objectOriginal) {
+        int nextId = this.movieClips.size() + this.shapes.size() + this.textFields.size() + this.movieClipModifiers.size() + 1;
+//        objectOriginal.setId(nextId);
+
         if (objectOriginal instanceof MovieClipOriginal movieClipOriginal) {
             this.movieClips.add(movieClipOriginal);
         } else if (objectOriginal instanceof ShapeOriginal shapeOriginal) {
@@ -673,6 +661,8 @@ public class SupercellSWF {
         } else {
             throw new RuntimeException("Object not recognized: " + objectOriginal);
         }
+
+        return nextId;
     }
 
     public void addExport(int movieClipId, String name) {
@@ -681,5 +671,21 @@ public class SupercellSWF {
 
     public int getMatrixBankCount() {
         return this.matrixBanks.size();
+    }
+
+    public List<ShapeOriginal> getShapes() {
+        return Collections.unmodifiableList(shapes);
+    }
+
+    public List<MovieClipOriginal> getMovieClips() {
+        return Collections.unmodifiableList(movieClips);
+    }
+
+    public List<TextFieldOriginal> getTextFields() {
+        return Collections.unmodifiableList(textFields);
+    }
+
+    public List<MovieClipModifierOriginal> getMovieClipModifiers() {
+        return Collections.unmodifiableList(movieClipModifiers);
     }
 }

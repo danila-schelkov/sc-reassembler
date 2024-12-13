@@ -43,8 +43,9 @@ public class Main {
                     throw new RuntimeException(e);
                 }
 
-                reassambler.addMovieClip(movieClip, swf);
-                reassambler.addExport(export.id(), export.name());
+                int newId = reassambler.addMovieClip(movieClip, swf);
+
+                reassambler.addExport(newId, export.name());
             }
 
             SupercellSWF reassambledSwf = reassambler.getSwf();
@@ -58,6 +59,8 @@ public class Main {
             }
 
             System.out.println(reassambledSwf.getExports());
+            reassambler.recalculateIds();
+
             reassambledSwf.save("sc/patched/" + basename + ".sc", Main::setProgress);
         });
     }

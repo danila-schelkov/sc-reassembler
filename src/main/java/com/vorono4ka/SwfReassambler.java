@@ -2,16 +2,16 @@ package com.vorono4ka;
 
 import com.vorono4ka.swf.*;
 import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
-import com.vorono4ka.swf.movieclips.MovieClipFrame;
-import com.vorono4ka.swf.movieclips.MovieClipFrameElement;
-import com.vorono4ka.swf.movieclips.MovieClipOriginal;
+import com.vorono4ka.swf.movieclips.*;
+import com.vorono4ka.swf.shapes.ShapeOriginal;
+import com.vorono4ka.swf.textfields.TextFieldOriginal;
 
 import java.util.*;
 
 public class SwfReassambler {
     private final SupercellSWF reassembledSwf;
 
-    private final Set<Integer> loadedObjectIds = new HashSet<>();
+    private final Map<Integer, Integer> loadedObjectIds = new HashMap<>();
     private final Map<Matrix2x3, Integer> currentMatrices = new HashMap<>();
     private final Map<ColorTransform, Integer> currentColorTransforms = new HashMap<>();
 
@@ -25,32 +25,37 @@ public class SwfReassambler {
         this.currentMatrixBankIndex = 0;
     }
 
-    public void addMovieClip(MovieClipOriginal movieClip, SupercellSWF swf) {
-        if (loadedObjectIds.contains(movieClip.getId())) {
-            return;
+    public int addMovieClip(MovieClipOriginal movieClip, SupercellSWF swf) {
+        if (loadedObjectIds.containsKey(movieClip.getId())) {
+            return -1;
         }
 
         addChildrenRecursively(swf, movieClip);
         addMatrices(swf, movieClip);
 
-        loadedObjectIds.add(movieClip.getId());
-        reassembledSwf.addObject(movieClip);
+        int newId = reassembledSwf.addObject(movieClip);
+        loadedObjectIds.put(movieClip.getId(), newId);
+        return newId;
     }
 
     private void addChildrenRecursively(SupercellSWF swf, MovieClipOriginal movieClip) {
-        if (loadedObjectIds.contains(movieClip.getId())) {
+        if (loadedObjectIds.containsKey(movieClip.getId())) {
             return;
         }
 
-        DisplayObjectOriginal[] timelineChildren;
-        try {
-            timelineChildren = movieClip.createTimelineChildren(swf);
-        } catch (UnableToFindObjectException e) {
-            throw new RuntimeException(e);
-        }
+        List<MovieClipChild> newChildren = new ArrayList<>();
+        List<MovieClipChild> children = movieClip.getChildren();
 
-        for (DisplayObjectOriginal child : timelineChildren) {
-            if (loadedObjectIds.contains(child.getId())) {
+        for (MovieClipChild childInfo : children) {
+            DisplayObjectOriginal child;
+            try {
+                child = swf.getOriginalDisplayObject(childInfo.id() & 0xFFFF, movieClip.getExportName());
+            } catch (UnableToFindObjectException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (loadedObjectIds.containsKey(child.getId())) {
+                newChildren.add(new MovieClipChild(loadedObjectIds.get(child.getId()), childInfo.blend(), childInfo.name()));
                 continue;
             }
 
@@ -59,9 +64,13 @@ public class SwfReassambler {
                 addMatrices(swf, movieClipOriginal);
             }
 
-            reassembledSwf.addObject(child);
-            loadedObjectIds.add(child.getId());
+            int newId = reassembledSwf.addObject(child);
+            loadedObjectIds.put(child.getId(), newId);
+
+            newChildren.add(new MovieClipChild(newId, childInfo.blend(), childInfo.name()));
         }
+
+        movieClip.setChildren(newChildren);
     }
 
     private void addMatrices(SupercellSWF swf, MovieClipOriginal movieClip) {
@@ -152,5 +161,20 @@ public class SwfReassambler {
 
     public SupercellSWF getSwf() {
         return reassembledSwf;
+    }
+
+    public void recalculateIds() {
+        for (ShapeOriginal shape : reassembledSwf.getShapes()) {
+            shape.setId(loadedObjectIds.get(shape.getId()));
+        }
+        for (TextFieldOriginal textField : reassembledSwf.getTextFields()) {
+            textField.setId(loadedObjectIds.get(textField.getId()));
+        }
+        for (MovieClipModifierOriginal modifier : reassembledSwf.getMovieClipModifiers()) {
+            modifier.setId(loadedObjectIds.get(modifier.getId()));
+        }
+        for (MovieClipOriginal movieClip : reassembledSwf.getMovieClips()) {
+            movieClip.setId(loadedObjectIds.get(movieClip.getId()));
+        }
     }
 }
