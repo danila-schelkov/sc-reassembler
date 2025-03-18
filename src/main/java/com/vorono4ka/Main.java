@@ -51,24 +51,27 @@ public class Main {
             System.exit(1);
         }
 
-        String exportsFilename = ns.getString("exports");
-        if (exportsFilename == null) {
-            throw new RuntimeException("Missing exports file");
-        }
-
 //        boolean useRegex = ns.getBoolean("regex");
         boolean preferLowres = ns.getBoolean("lowres");
         boolean useRegex = false;
 
-        List<String> exports = Files.readAllLines(Paths.get(exportsFilename));
-        List<Predicate<String>> matchers = new ArrayList<>();
-        for (String export : exports) {
-            String pattern = export;
-            if (!useRegex) {
-                pattern = Pattern.quote(pattern);
-            }
+        List<Predicate<String>> matchers;
 
-            matchers.add(Pattern.compile(pattern).asPredicate());
+        String exportsFilename = ns.getString("exports");
+        if (exportsFilename != null) {
+            matchers = new ArrayList<>();
+
+            List<String> exports = Files.readAllLines(Paths.get(exportsFilename));
+            for (String export : exports) {
+                String pattern = export;
+                if (!useRegex) {
+                    pattern = Pattern.quote(pattern);
+                }
+
+                matchers.add(Pattern.compile(pattern).asPredicate());
+            }
+        } else {
+            matchers = null;
         }
 
         Stream<Path> scFiles;
@@ -97,7 +100,7 @@ public class Main {
         SupercellSWF swf = getSupercellSWF(filepath.toString(), preferLowres);
         SwfReassembler reassembler = new SwfReassembler();
         for (Export export : swf.getExports()) {
-            if (matcher.stream().noneMatch(stringPredicate -> stringPredicate.test(export.name()))) {
+            if (matcher != null && matcher.stream().noneMatch(stringPredicate -> stringPredicate.test(export.name()))) {
                 continue;
             }
 

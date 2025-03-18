@@ -37,21 +37,30 @@ public final class FBMatrixBank extends Table {
   public int colorTransformsLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
   public com.supercell.swf.FBColorTransform.Vector colorTransformsVector() { return colorTransformsVector(new com.supercell.swf.FBColorTransform.Vector()); }
   public com.supercell.swf.FBColorTransform.Vector colorTransformsVector(com.supercell.swf.FBColorTransform.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 7, bb) : null; }
+  public com.supercell.swf.FBShortMatrix2x3 shortMatrices(int j) { return shortMatrices(new com.supercell.swf.FBShortMatrix2x3(), j); }
+  public com.supercell.swf.FBShortMatrix2x3 shortMatrices(com.supercell.swf.FBShortMatrix2x3 obj, int j) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o) + j * 12, bb) : null; }
+  public int shortMatricesLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
+  public com.supercell.swf.FBShortMatrix2x3.Vector shortMatricesVector() { return shortMatricesVector(new com.supercell.swf.FBShortMatrix2x3.Vector()); }
+  public com.supercell.swf.FBShortMatrix2x3.Vector shortMatricesVector(com.supercell.swf.FBShortMatrix2x3.Vector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), 12, bb) : null; }
 
   public static int createFBMatrixBank(FlatBufferBuilder builder,
       int matricesOffset,
-      int colorTransformsOffset) {
-    builder.startTable(2);
+      int colorTransformsOffset,
+      int shortMatricesOffset) {
+    builder.startTable(3);
+    FBMatrixBank.addShortMatrices(builder, shortMatricesOffset);
     FBMatrixBank.addColorTransforms(builder, colorTransformsOffset);
     FBMatrixBank.addMatrices(builder, matricesOffset);
     return FBMatrixBank.endFBMatrixBank(builder);
   }
 
-  public static void startFBMatrixBank(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void startFBMatrixBank(FlatBufferBuilder builder) { builder.startTable(3); }
   public static void addMatrices(FlatBufferBuilder builder, int matricesOffset) { builder.addOffset(0, matricesOffset, 0); }
   public static void startMatricesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(24, numElems, 4); }
   public static void addColorTransforms(FlatBufferBuilder builder, int colorTransformsOffset) { builder.addOffset(1, colorTransformsOffset, 0); }
   public static void startColorTransformsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(7, numElems, 1); }
+  public static void addShortMatrices(FlatBufferBuilder builder, int shortMatricesOffset) { builder.addOffset(2, shortMatricesOffset, 0); }
+  public static void startShortMatricesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(12, numElems, 2); }
   public static int endFBMatrixBank(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

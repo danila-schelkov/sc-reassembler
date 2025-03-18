@@ -58,6 +58,11 @@ public final class FBMovieClip extends Table {
   public int frameElementOffset() { int o = __offset(22); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
   public int matrixBankIndex() { int o = __offset(24); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
   public int scalingGridIndex() { int o = __offset(26); return o != 0 ? bb.getInt(o + bb_pos) : -1; }
+  public com.supercell.swf.FBMovieClipShortFrame shortFrames(int j) { return shortFrames(new com.supercell.swf.FBMovieClipShortFrame(), j); }
+  public com.supercell.swf.FBMovieClipShortFrame shortFrames(com.supercell.swf.FBMovieClipShortFrame obj, int j) { int o = __offset(28); return o != 0 ? obj.__assign(__vector(o) + j * 2, bb) : null; }
+  public int shortFramesLength() { int o = __offset(28); return o != 0 ? __vector_len(o) : 0; }
+  public com.supercell.swf.FBMovieClipShortFrame.Vector shortFramesVector() { return shortFramesVector(new com.supercell.swf.FBMovieClipShortFrame.Vector()); }
+  public com.supercell.swf.FBMovieClipShortFrame.Vector shortFramesVector(com.supercell.swf.FBMovieClipShortFrame.Vector obj) { int o = __offset(28); return o != 0 ? obj.__assign(__vector(o), 2, bb) : null; }
 
   public static int createFBMovieClip(FlatBufferBuilder builder,
       int id,
@@ -71,8 +76,10 @@ public final class FBMovieClip extends Table {
       int framesOffset,
       int frameElementOffset,
       int matrixBankIndex,
-      int scalingGridIndex) {
-    builder.startTable(12);
+      int scalingGridIndex,
+      int shortFramesOffset) {
+    builder.startTable(13);
+    FBMovieClip.addShortFrames(builder, shortFramesOffset);
     FBMovieClip.addScalingGridIndex(builder, scalingGridIndex);
     FBMovieClip.addFrameElementOffset(builder, frameElementOffset);
     FBMovieClip.addFrames(builder, framesOffset);
@@ -88,7 +95,7 @@ public final class FBMovieClip extends Table {
     return FBMovieClip.endFBMovieClip(builder);
   }
 
-  public static void startFBMovieClip(FlatBufferBuilder builder) { builder.startTable(12); }
+  public static void startFBMovieClip(FlatBufferBuilder builder) { builder.startTable(13); }
   public static void addId(FlatBufferBuilder builder, int id) { builder.addShort(0, (short) id, (short) 0); }
   public static void addExportNameRefId(FlatBufferBuilder builder, int exportNameRefId) { builder.addInt(1, exportNameRefId, 0); }
   public static void addFps(FlatBufferBuilder builder, int fps) { builder.addByte(2, (byte) fps, (byte) 0); }
@@ -109,6 +116,8 @@ public final class FBMovieClip extends Table {
   public static void addFrameElementOffset(FlatBufferBuilder builder, int frameElementOffset) { builder.addInt(9, frameElementOffset, 0); }
   public static void addMatrixBankIndex(FlatBufferBuilder builder, int matrixBankIndex) { builder.addShort(10, (short) matrixBankIndex, (short) 0); }
   public static void addScalingGridIndex(FlatBufferBuilder builder, int scalingGridIndex) { builder.addInt(11, scalingGridIndex, -1); }
+  public static void addShortFrames(FlatBufferBuilder builder, int shortFramesOffset) { builder.addOffset(12, shortFramesOffset, 0); }
+  public static void startShortFramesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(2, numElems, 2); }
   public static int endFBMovieClip(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
