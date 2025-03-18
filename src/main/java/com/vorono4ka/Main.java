@@ -36,6 +36,7 @@ public class Main {
         parser.addArgument("-d", "--directory").help("Directory of files to be reassembled");
         parser.addArgument("-l", "--lowres").action(Arguments.storeTrue()).help("Prefer low resolution even if highres exists");
         parser.addArgument("-e", "--exports").help("File containing all export names separated by a line break");
+        parser.addArgument("-n", "--negate").action(Arguments.storeTrue()).help("Turns the exports from whitelist to blacklist");
 //        parser.addArgument("-r", "--regex").action(Arguments.storeFalse()).help("Should convert export names to regular expressions");
 
         if (args.length == 0) {
@@ -53,6 +54,7 @@ public class Main {
 
 //        boolean useRegex = ns.getBoolean("regex");
         boolean preferLowres = ns.getBoolean("lowres");
+        boolean negate = ns.getBoolean("negate");
         boolean useRegex = false;
 
         List<Predicate<String>> matchers;
@@ -89,18 +91,18 @@ public class Main {
 
         scFiles = scFiles.filter(path -> path.toFile().isFile());
 
-        scFiles.forEach(filepath -> handleFile(filepath, matchers, preferLowres));
+        scFiles.forEach(filepath -> handleFile(filepath, matchers, preferLowres, negate));
         scFiles.close();
     }
 
-    private static void handleFile(Path filepath, List<Predicate<String>> matcher, boolean preferLowres) {
+    private static void handleFile(Path filepath, List<Predicate<String>> matchers, boolean preferLowres, boolean negate) {
         String filename = filepath.getFileName().toString();
         String basename = filename.substring(0, filename.lastIndexOf('.'));
 
         SupercellSWF swf = getSupercellSWF(filepath.toString(), preferLowres);
         SwfReassembler reassembler = new SwfReassembler();
         for (Export export : swf.getExports()) {
-            if (matcher != null && matcher.stream().noneMatch(stringPredicate -> stringPredicate.test(export.name()))) {
+            if (matchers != null && matchers.stream().noneMatch(stringPredicate -> stringPredicate.test(export.name())) == !negate) {
                 continue;
             }
 
