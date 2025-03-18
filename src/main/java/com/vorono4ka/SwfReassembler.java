@@ -8,7 +8,7 @@ import com.vorono4ka.swf.textfields.TextFieldOriginal;
 
 import java.util.*;
 
-public class SwfReassambler {
+public class SwfReassembler {
     private final SupercellSWF reassembledSwf;
 
     private final Map<Integer, Integer> loadedObjectIds = new HashMap<>();
@@ -18,7 +18,7 @@ public class SwfReassambler {
     private ScMatrixBank currentMatrixBank;
     private short currentMatrixBankIndex;
 
-    public SwfReassambler() {
+    public SwfReassembler() {
         this.reassembledSwf = SupercellSWF.createEmpty();
 
         this.currentMatrixBank = reassembledSwf.getMatrixBank(0);
@@ -27,7 +27,7 @@ public class SwfReassambler {
 
     public int addMovieClip(MovieClipOriginal movieClip, SupercellSWF swf) {
         if (loadedObjectIds.containsKey(movieClip.getId())) {
-            return -1;
+            return loadedObjectIds.get(movieClip.getId());
         }
 
         addChildrenRecursively(swf, movieClip);

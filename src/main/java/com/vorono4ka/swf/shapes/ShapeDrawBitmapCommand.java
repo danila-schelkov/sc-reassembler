@@ -15,9 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.function.IntFunction;
 
-/**
- * Overrides default class to apply points sorting.
- */
+/// Overrides default class to apply points sorting.
 public class ShapeDrawBitmapCommand implements Savable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShapeDrawBitmapCommand.class);
 
@@ -54,6 +52,7 @@ public class ShapeDrawBitmapCommand implements Savable {
 
         Point center = new Point(bounds.getMidX(), bounds.getMidY());
 
+        // Sorting points clockwise
         Arrays.sort(this.shapePoints, (a, b) -> {
             int dax = ((a.getX() - center.getX()) > 0) ? 1 : 0;
             int day = ((a.getY() - center.getY()) > 0) ? 1 : 0;

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id "io.netifi.flatbuffers" version "1.0.7"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = 'com.vorono4ka'
@@ -23,6 +24,7 @@ dependencies {
     implementation "org.slf4j:slf4j-simple:${project.slf4j_version}"
     implementation "com.vorono4ka:sc-file:${project.sc_file_version}"
     implementation "com.vorono4ka:supercell-swf:${project.supercell_swf_version}"
+    implementation "net.sourceforge.argparse4j:argparse4j:${project.argparse4j_version}"
 }
 
 import io.netifi.flatbuffers.plugin.tasks.FlatBuffers
@@ -37,5 +39,7 @@ tasks.register('createFlatBuffers', FlatBuffers) {
     outputDir = file("src/generated/flatbuffers")
     language = 'java'
 }
+
+jar { manifest { attributes 'Main-Class': 'com.vorono4ka.Main' } }
 
 compileJava.dependsOn createFlatBuffers
