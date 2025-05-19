@@ -1,11 +1,15 @@
 package com.vorono4ka;
 
 import com.vorono4ka.swf.Export;
+import com.vorono4ka.swf.Matrix2x3;
+import com.vorono4ka.swf.ScMatrixBank;
 import com.vorono4ka.swf.SupercellSWF;
 import com.vorono4ka.swf.exceptions.LoadingFaultException;
 import com.vorono4ka.swf.exceptions.TextureFileNotFound;
 import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
 import com.vorono4ka.swf.exceptions.UnsupportedCustomPropertyException;
+import com.vorono4ka.swf.movieclips.MovieClipFrame;
+import com.vorono4ka.swf.movieclips.MovieClipFrameElement;
 import com.vorono4ka.swf.movieclips.MovieClipOriginal;
 import com.vorono4ka.swf.textures.SWFTexture;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -20,8 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Main {
@@ -29,15 +31,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         ArgumentParser parser = ArgumentParsers.newFor("SC Downgrade").build()
-            .defaultHelp(true)
-            .description("Reassemble SC file to SC of version 1, containing only needed export names.");
+                .defaultHelp(true)
+                .description("Reassemble SC file to SC of version 1, containing only needed export names.");
 
         parser.addArgument("-f", "--files").nargs("*").help("Files to be reassembled");
         parser.addArgument("-d", "--directory").help("Directory of files to be reassembled");
         parser.addArgument("-l", "--lowres").action(Arguments.storeTrue()).help("Prefer low resolution even if highres exists");
-        parser.addArgument("-e", "--exports").help("File containing all export names separated by a line break");
-        parser.addArgument("-n", "--negate").action(Arguments.storeTrue()).help("Turns the exports from whitelist to blacklist");
-//        parser.addArgument("-r", "--regex").action(Arguments.storeFalse()).help("Should convert export names to regular expressions");
 
         if (args.length == 0) {
             parser.printUsage();
@@ -52,29 +51,7 @@ public class Main {
             System.exit(1);
         }
 
-//        boolean useRegex = ns.getBoolean("regex");
         boolean preferLowres = ns.getBoolean("lowres");
-        boolean negate = ns.getBoolean("negate");
-        boolean useRegex = false;
-
-        List<Predicate<String>> matchers;
-
-        String exportsFilename = ns.getString("exports");
-        if (exportsFilename != null) {
-            matchers = new ArrayList<>();
-
-            List<String> exports = Files.readAllLines(Paths.get(exportsFilename));
-            for (String export : exports) {
-                String pattern = export;
-                if (!useRegex) {
-                    pattern = Pattern.quote(pattern);
-                }
-
-                matchers.add(Pattern.compile(pattern).asPredicate());
-            }
-        } else {
-            matchers = null;
-        }
 
         Stream<Path> scFiles;
         String directory = ns.getString("directory");
@@ -91,21 +68,60 @@ public class Main {
 
         scFiles = scFiles.filter(path -> path.toFile().isFile());
 
-        scFiles.forEach(filepath -> handleFile(filepath, matchers, preferLowres, negate));
+        scFiles.forEach(filepath -> handleFile(filepath, preferLowres));
         scFiles.close();
     }
 
-    private static void handleFile(Path filepath, List<Predicate<String>> matchers, boolean preferLowres, boolean negate) {
+    private static void handleFile(Path filepath, boolean preferLowres) {
         String filename = filepath.getFileName().toString();
         String basename = filename.substring(0, filename.lastIndexOf('.'));
 
         SupercellSWF swf = getSupercellSWF(filepath.toString(), preferLowres);
+
+        for (Export export : swf.getExports()) {
+            System.out.println(export);
+        }
+
+        try {
+            MovieClipOriginal mc = swf.getOriginalMovieClip(482, null);
+
+            MovieClipFrame mainFrame = mc.getFrames().get(0);
+
+            List<MovieClipFrameElement> elements = new ArrayList<>(mainFrame.getElements());
+            MovieClipFrameElement element3 = elements.get(3);
+            MovieClipFrameElement element4 = elements.get(4);
+
+            ScMatrixBank matrixBank = swf.getMatrixBank(mc.getMatrixBankIndex());
+            Matrix2x3.DecomposedMatrix2x3 decomposed3 = matrixBank.getMatrix(element3.matrixIndex()).decompose();
+            Matrix2x3.DecomposedMatrix2x3 decomposed4 = matrixBank.getMatrix(element4.matrixIndex()).decompose();
+
+            Matrix2x3 matrix3 = new Matrix2x3();
+            matrix3.rotateRadians((float) decomposed3.rotationRadians());
+            matrix3.move((float) decomposed3.x(), (float) decomposed3.y());
+            matrix3.scaleMultiply((float) decomposed4.scaleX(), (float) decomposed4.scaleY());
+
+            Matrix2x3 matrix4 = new Matrix2x3();
+            matrix4.rotateRadians((float) decomposed4.rotationRadians());
+            matrix4.move((float) decomposed4.x(), (float) decomposed4.y());
+            matrix4.scaleMultiply((float) decomposed3.scaleX(), (float) decomposed3.scaleY());
+
+            matrixBank.setMatrix(element3.matrixIndex(), matrix3);
+            matrixBank.setMatrix(element4.matrixIndex(), matrix4);
+
+            elements.set(3, new MovieClipFrameElement(3, element4.matrixIndex(), element4.colorTransformIndex()));
+            elements.set(4, new MovieClipFrameElement(4, element3.matrixIndex(), element3.colorTransformIndex()));
+
+            mainFrame.setElements(elements);
+
+            for (MovieClipFrameElement element : elements) {
+                System.out.println(element);
+            }
+        } catch (UnableToFindObjectException e) {
+            throw new RuntimeException(e);
+        }
+
         SwfReassembler reassembler = new SwfReassembler();
         for (Export export : swf.getExports()) {
-            if (matchers != null && matchers.stream().noneMatch(stringPredicate -> stringPredicate.test(export.name())) == !negate) {
-                continue;
-            }
-
             MovieClipOriginal movieClip;
             try {
                 movieClip = swf.getOriginalMovieClip(export.id(), export.name());
@@ -137,21 +153,6 @@ public class Main {
         String outputFilepath = reassembled.resolve(basename + ".sc").toString();
 
         reassembledSwf.save(outputFilepath, Main::setProgress);
-        System.out.printf("Saved as %s\n", outputFilepath);
-    }
-
-    private static void handleFile1(Path filepath, boolean preferLowres) {
-        String filename = filepath.getFileName().toString();
-        String basename = filename.substring(0, filename.lastIndexOf('.'));
-
-        SupercellSWF swf = getSupercellSWF(filepath.toString(), preferLowres);
-
-        Path directory = filepath.toAbsolutePath().getParent();
-        Path reassembled = directory.resolve("downgraded");
-        reassembled.toFile().mkdirs();
-        String outputFilepath = reassembled.resolve(basename + ".sc").toString();
-
-        swf.save(outputFilepath, Main::setProgress);
         System.out.printf("Saved as %s\n", outputFilepath);
     }
 

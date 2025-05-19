@@ -21,7 +21,7 @@ import java.nio.ByteOrder;
 
 @SuppressWarnings("unused")
 public final class FBShapes extends Table {
-  public static void ValidateVersion() { Constants.FLATBUFFERS_24_3_25(); }
+  public static void ValidateVersion() { Constants.FLATBUFFERS_25_2_10(); }
   public static FBShapes getRootAsFBShapes(ByteBuffer _bb) { return getRootAsFBShapes(_bb, new FBShapes()); }
   public static FBShapes getRootAsFBShapes(ByteBuffer _bb, FBShapes obj) { _bb.order(ByteOrder.LITTLE_ENDIAN); return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
