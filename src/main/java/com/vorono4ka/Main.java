@@ -1,8 +1,6 @@
 package com.vorono4ka;
 
 import com.vorono4ka.swf.Export;
-import com.vorono4ka.swf.Matrix2x3;
-import com.vorono4ka.swf.ScMatrixBank;
 import com.vorono4ka.swf.SupercellSWF;
 import com.vorono4ka.swf.exceptions.LoadingFaultException;
 import com.vorono4ka.swf.exceptions.TextureFileNotFound;
@@ -83,39 +81,7 @@ public class Main {
         }
 
         try {
-            MovieClipOriginal mc = swf.getOriginalMovieClip(482, null);
-
-            MovieClipFrame mainFrame = mc.getFrames().get(0);
-
-            List<MovieClipFrameElement> elements = new ArrayList<>(mainFrame.getElements());
-            MovieClipFrameElement element3 = elements.get(3);
-            MovieClipFrameElement element4 = elements.get(4);
-
-            ScMatrixBank matrixBank = swf.getMatrixBank(mc.getMatrixBankIndex());
-            Matrix2x3.DecomposedMatrix2x3 decomposed3 = matrixBank.getMatrix(element3.matrixIndex()).decompose();
-            Matrix2x3.DecomposedMatrix2x3 decomposed4 = matrixBank.getMatrix(element4.matrixIndex()).decompose();
-
-            Matrix2x3 matrix3 = new Matrix2x3();
-            matrix3.rotateRadians((float) decomposed3.rotationRadians());
-            matrix3.move((float) decomposed3.x(), (float) decomposed3.y());
-            matrix3.scaleMultiply((float) decomposed4.scaleX(), (float) decomposed4.scaleY());
-
-            Matrix2x3 matrix4 = new Matrix2x3();
-            matrix4.rotateRadians((float) decomposed4.rotationRadians());
-            matrix4.move((float) decomposed4.x(), (float) decomposed4.y());
-            matrix4.scaleMultiply((float) decomposed3.scaleX(), (float) decomposed3.scaleY());
-
-            matrixBank.setMatrix(element3.matrixIndex(), matrix3);
-            matrixBank.setMatrix(element4.matrixIndex(), matrix4);
-
-            elements.set(3, new MovieClipFrameElement(3, element4.matrixIndex(), element4.colorTransformIndex()));
-            elements.set(4, new MovieClipFrameElement(4, element3.matrixIndex(), element3.colorTransformIndex()));
-
-            mainFrame.setElements(elements);
-
-            for (MovieClipFrameElement element : elements) {
-                System.out.println(element);
-            }
+            removeChildByIndex(swf.getOriginalMovieClip(483, null), 31);
         } catch (UnableToFindObjectException e) {
             throw new RuntimeException(e);
         }
@@ -154,6 +120,25 @@ public class Main {
 
         reassembledSwf.save(outputFilepath, Main::setProgress);
         System.out.printf("Saved as %s\n", outputFilepath);
+    }
+
+    private static void removeChildByIndex(MovieClipOriginal mc, int childIndex) {
+        List<MovieClipFrame> frames = mc.getFrames();
+        for (MovieClipFrame frame : frames) {
+            List<MovieClipFrameElement> elements = new ArrayList<>(frame.getElements());
+            elements.removeIf(element -> element.childIndex() == childIndex);
+
+            for (int i = 0; i < elements.size(); i++) {
+                MovieClipFrameElement element = elements.get(i);
+                if (element.childIndex() > childIndex) {
+                    elements.set(i, new MovieClipFrameElement(element.childIndex() - 1, element.matrixIndex(), element.colorTransformIndex()));
+                }
+            }
+
+            frame.setElements(elements);
+        }
+
+        mc.getChildren().remove(childIndex);
     }
 
     private static SupercellSWF getSupercellSWF(String filepath, boolean preferLowres) {
