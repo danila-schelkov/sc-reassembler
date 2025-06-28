@@ -6,8 +6,6 @@ import com.vorono4ka.swf.exceptions.LoadingFaultException;
 import com.vorono4ka.swf.exceptions.TextureFileNotFound;
 import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
 import com.vorono4ka.swf.exceptions.UnsupportedCustomPropertyException;
-import com.vorono4ka.swf.movieclips.MovieClipFrame;
-import com.vorono4ka.swf.movieclips.MovieClipFrameElement;
 import com.vorono4ka.swf.movieclips.MovieClipOriginal;
 import com.vorono4ka.swf.textures.SWFTexture;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -20,7 +18,6 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -76,16 +73,6 @@ public class Main {
 
         SupercellSWF swf = getSupercellSWF(filepath.toString(), preferLowres);
 
-        for (Export export : swf.getExports()) {
-            System.out.println(export);
-        }
-
-        try {
-            removeChildByIndex(swf.getOriginalMovieClip(483, null), 31);
-        } catch (UnableToFindObjectException e) {
-            throw new RuntimeException(e);
-        }
-
         SwfReassembler reassembler = new SwfReassembler();
         for (Export export : swf.getExports()) {
             MovieClipOriginal movieClip;
@@ -102,7 +89,7 @@ public class Main {
 
         SupercellSWF reassembledSwf = reassembler.getSwf();
         if (reassembledSwf.getExports().isEmpty()) {
-            System.out.println("No matched exports found");
+            System.err.println("No matched exports found");
             return;
         }
 
@@ -120,25 +107,6 @@ public class Main {
 
         reassembledSwf.save(outputFilepath, Main::setProgress);
         System.out.printf("Saved as %s\n", outputFilepath);
-    }
-
-    private static void removeChildByIndex(MovieClipOriginal mc, int childIndex) {
-        List<MovieClipFrame> frames = mc.getFrames();
-        for (MovieClipFrame frame : frames) {
-            List<MovieClipFrameElement> elements = new ArrayList<>(frame.getElements());
-            elements.removeIf(element -> element.childIndex() == childIndex);
-
-            for (int i = 0; i < elements.size(); i++) {
-                MovieClipFrameElement element = elements.get(i);
-                if (element.childIndex() > childIndex) {
-                    elements.set(i, new MovieClipFrameElement(element.childIndex() - 1, element.matrixIndex(), element.colorTransformIndex()));
-                }
-            }
-
-            frame.setElements(elements);
-        }
-
-        mc.getChildren().remove(childIndex);
     }
 
     private static SupercellSWF getSupercellSWF(String filepath, boolean preferLowres) {

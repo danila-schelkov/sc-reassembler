@@ -1,6 +1,7 @@
 package com.vorono4ka.swf;
 
 import com.supercell.swf.FBMatrix2x3;
+import com.supercell.swf.FBShortMatrix2x3;
 import com.vorono4ka.streams.ByteStream;
 
 import java.util.Objects;
@@ -52,6 +53,15 @@ public class Matrix2x3 implements Savable {
     }
 
     public void initFromFlatBuffer(FBMatrix2x3 matrix) {
+        this.a = matrix.a();
+        this.b = matrix.b();
+        this.c = matrix.c();
+        this.d = matrix.d();
+        this.x = matrix.x();
+        this.y = matrix.y();
+    }
+
+    public void initFromFlatBuffer(FBShortMatrix2x3 matrix) {
         this.a = matrix.a();
         this.b = matrix.b();
         this.c = matrix.c();
