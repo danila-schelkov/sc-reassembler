@@ -1,10 +1,10 @@
-package com.vorono4ka;
+package dev.donutquine;
 
-import com.vorono4ka.swf.*;
-import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
-import com.vorono4ka.swf.movieclips.*;
-import com.vorono4ka.swf.shapes.ShapeOriginal;
-import com.vorono4ka.swf.textfields.TextFieldOriginal;
+import dev.donutquine.swf.*;
+import dev.donutquine.swf.exceptions.UnableToFindObjectException;
+import dev.donutquine.swf.movieclips.*;
+import dev.donutquine.swf.shapes.ShapeOriginal;
+import dev.donutquine.swf.textfields.TextFieldOriginal;
 
 import java.util.*;
 

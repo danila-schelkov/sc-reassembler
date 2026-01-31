@@ -37,7 +37,9 @@ public final class FBTexture extends Table {
   public ByteVector dataVector(ByteVector obj) { int o = __offset(12); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
   public ByteBuffer dataAsByteBuffer() { return __vector_as_bytebuffer(12, 1); }
   public ByteBuffer dataInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 12, 1); }
-  public int textureFileRefId() { int o = __offset(14); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public String textureFile() { int o = __offset(14); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer textureFileAsByteBuffer() { return __vector_as_bytebuffer(14, 1); }
+  public ByteBuffer textureFileInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 14, 1); }
 
   public static int createFBTexture(FlatBufferBuilder builder,
       int flags,
@@ -45,9 +47,9 @@ public final class FBTexture extends Table {
       int width,
       int height,
       int dataOffset,
-      int textureFileRefId) {
+      int textureFileOffset) {
     builder.startTable(6);
-    FBTexture.addTextureFileRefId(builder, textureFileRefId);
+    FBTexture.addTextureFile(builder, textureFileOffset);
     FBTexture.addData(builder, dataOffset);
     FBTexture.addHeight(builder, height);
     FBTexture.addWidth(builder, width);
@@ -65,7 +67,7 @@ public final class FBTexture extends Table {
   public static int createDataVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createDataVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startDataVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
-  public static void addTextureFileRefId(FlatBufferBuilder builder, int textureFileRefId) { builder.addInt(5, textureFileRefId, 0); }
+  public static void addTextureFile(FlatBufferBuilder builder, int textureFileOffset) { builder.addOffset(5, textureFileOffset, 0); }
   public static int endFBTexture(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

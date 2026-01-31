@@ -1,13 +1,13 @@
-package com.vorono4ka;
+package dev.donutquine;
 
-import com.vorono4ka.swf.Export;
-import com.vorono4ka.swf.SupercellSWF;
-import com.vorono4ka.swf.exceptions.LoadingFaultException;
-import com.vorono4ka.swf.exceptions.TextureFileNotFound;
-import com.vorono4ka.swf.exceptions.UnableToFindObjectException;
-import com.vorono4ka.swf.exceptions.UnsupportedCustomPropertyException;
-import com.vorono4ka.swf.movieclips.MovieClipOriginal;
-import com.vorono4ka.swf.textures.SWFTexture;
+import dev.donutquine.swf.Export;
+import dev.donutquine.swf.SupercellSWF;
+import dev.donutquine.swf.exceptions.LoadingFaultException;
+import dev.donutquine.swf.exceptions.TextureFileNotFound;
+import dev.donutquine.swf.exceptions.UnableToFindObjectException;
+import dev.donutquine.swf.exceptions.UnsupportedCustomPropertyException;
+import dev.donutquine.swf.movieclips.MovieClipOriginal;
+import dev.donutquine.swf.textures.SWFTexture;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;

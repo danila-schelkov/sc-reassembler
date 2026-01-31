@@ -1,10 +1,11 @@
 plugins {
     id 'java'
+    id 'application'
     id "io.netifi.flatbuffers" version "1.0.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = 'com.vorono4ka'
+group = 'dev.donutquine'
 version = project.version
 
 repositories {
@@ -13,8 +14,8 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/danila-schelkov/*")
         credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
         }
     }
 }
@@ -22,8 +23,8 @@ repositories {
 dependencies {
     implementation "com.google.flatbuffers:flatbuffers-java:${project.flatbuffers_version}"
     implementation "org.slf4j:slf4j-simple:${project.slf4j_version}"
-    implementation "com.vorono4ka:sc-file:${project.sc_file_version}"
-    implementation "com.vorono4ka:supercell-swf:${project.supercell_swf_version}"
+    implementation "dev.donutquine:sc-file:${project.sc_file_version}"
+    implementation "dev.donutquine:supercell-swf:${project.supercell_swf_version}"
     implementation "net.sourceforge.argparse4j:argparse4j:${project.argparse4j_version}"
 }
 
@@ -40,6 +41,9 @@ tasks.register('createFlatBuffers', FlatBuffers) {
     language = 'java'
 }
 
-jar { manifest { attributes 'Main-Class': 'com.vorono4ka.Main' } }
-
 compileJava.dependsOn createFlatBuffers
+
+application {
+    mainClass = 'dev.donutquine.Main'
+}
+

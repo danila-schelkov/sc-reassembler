@@ -1,14 +1,14 @@
-package com.vorono4ka.swf.shapes;
+package dev.donutquine.swf.shapes;
 
 import com.supercell.swf.FBResources;
 import com.supercell.swf.FBShapeDrawBitmapCommand;
 import com.supercell.swf.FBShapePoint;
-import com.vorono4ka.math.Point;
-import com.vorono4ka.math.Rect;
-import com.vorono4ka.streams.ByteStream;
-import com.vorono4ka.swf.Savable;
-import com.vorono4ka.swf.Tag;
-import com.vorono4ka.swf.exceptions.UnsupportedTagException;
+import dev.donutquine.math.Point;
+import dev.donutquine.math.Rect;
+import dev.donutquine.streams.ByteStream;
+import dev.donutquine.swf.Savable;
+import dev.donutquine.swf.Tag;
+import dev.donutquine.swf.exceptions.UnsupportedTagException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
