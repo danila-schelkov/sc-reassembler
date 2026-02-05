@@ -1,12 +1,13 @@
 plugins {
     id 'java'
     id 'application'
-    id "io.netifi.flatbuffers" version "1.0.7"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id "dev.donutquine.flatbuffers" version "1.0.8"
+    id "com.gradleup.shadow" version "9.3.1"
 }
 
 group = 'dev.donutquine'
 version = project.version
+
 
 repositories {
     mavenCentral()
