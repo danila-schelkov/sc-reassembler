@@ -1,90 +1,91 @@
 # SC Reassembler
 
-SC Reassembler — демонстрационный проект, показывающий, как можно использовать модули
-[SC Editor](https://github.com/danila-schelkov/sc-editor) для собственных целей.
-Основная задача проекта — «понижение версии» файлов формата SC2 и сохранение их в старом
-формате SC.
+[RU](./docs/README.RU.md)
 
-## Основные возможности
+SC Reassembler is a demonstration project showing how the modules of
+[SC Editor](https://github.com/danila-schelkov/sc-editor) can be used for custom purposes.
+The main purpose of the project is to downgrade SC2 files and save them in the older SC format.
 
-- Работа с экспортами: возможность исключать из файла экспорты по их именам или,
-  наоборот, собирать файл только из нужных экспортов.
+## Features
 
-- Понижение версии файлов: конвертация файлов формата SC2 в формат SC,
-  для которого существует большее количество инструментов для редактирования.
+* Managing exports: allows excluding exports from a file by name or,
+  conversely, assembling a file only from the selected exports.
 
-## Как использовать?
+* Downgrading file versions: converting SC2 files to SC format,
+  which has a wider range of editing tools available.
 
-1. Клонирование репозитория:
+## How to use?
+
+1. Clone the repository:
 
    ```bash
    git clone https://github.com/danila-schelkov/sc-reassembler.git
    ```
 
-2. Сборка проекта:
+2. Build the project to all-in-one jar file:
 
    ```bash
    cd sc-reassembler
-   ./gradlew build
+   ./gradlew shadowJar
    ```
 
-3. Запуск приложения:
+3. Run the application:
 
    ```bash
-   java -jar build/libs/sc-reassembler.jar [options]
+   ./gradlew run --args="[options]"  # or
+   java -jar build/libs/sc-reassembler-{version}-all.jar [options]
    ```
 
-Доступные опции:
+Available options:
 
-- `--exports <имя текстового файла>`: указание файла с нужными именами экспортов.
+- `--exports <text file name>`: specify a file with the required export names.
 
-- `--negate`: при указании данного флага экспорты из файла exports будут исключаться из
-  файла, а не добавляться в него.
+- `--negate`: if this flag is set, the exports listed in the exports file will be excluded
+  from the output file instead of being added to it.
 
-- `--files <путь>`: указать путь к входному файлу SC или SC2.
+- `--files <path>`: specify the path to the input SC or SC2 file.
 
-- `--directory <путь>`: указать путь к папке с нужными SC файлами.
+- `--directory <path>`: specify the path to a folder with the required SC files.
 
-Пример использования:
+Example usage:
 
-   ```bash
-   java -jar build/libs/sc-reassembler.jar --files path/to/input.sc --exports exports.txt
-   ```
+```bash
+java -jar build/libs/sc-reassembler.jar --files path/to/input.sc --exports exports.txt
+```
 
-После вызова данной команды, рядом с файлом `path/to/input.sc` появится папка
-`reassembled`, в которой будет лежать новый SC файл. В нём будут только те экспорты,
-имена которых описаны в файле `exports.txt`.
+After running this command, a folder named `reassembled` will appear next to `path/to/input.sc`,
+containing the new SC file. It will include only the exports listed in `exports.txt`.
 
-## Зависимости
+## Dependencies
 
-- Supercell SWF: используется для работы с файлами форматов SC и SC2.
+* Supercell SWF: used to work with SC and SC2 format files.
 
-- FlatBuffers: необходим для генерации классов из `.fbs`-файлов, так как
-  переопределяются классы библиотеки Supercell SWF (см.
-  [Технические особенности](#технические-особенности)).
+* FlatBuffers: required to generate classes from `.fbs` files, since
+  some classes of the Supercell SWF library are overridden (see
+  [Technical Details](#technical-details)).
 
-## Технические особенности
+## Technical Details
 
-В проекте переопределяются некоторые классы из библиотеки Supercell SWF.
-Из-за этого возникает необходимость включать в проект генерацию классов FlatBuffers из
-`.fbs`-файлов. Этот процесс настроен в Gradle с помощью соответствующих плагинов.
+Certain classes from the Supercell SWF library are overridden in this project.
+Therefore, FlatBuffers class generation from `.fbs` files must be included in the project.
+This process is set up in Gradle using the corresponding plugins.
 
-Если вы не планируете переопределять классы библиотеки, в которых используются
-FlatBuffers, то можете не включать в своем проекте в Gradle всё, что связано с
-FlatBuffers.
+If you do not intend to override library classes that use FlatBuffers,
+you can omit FlatBuffers-related configuration in your Gradle project.
 
-Я предпочитаю не включать сгенерированные файлы в git-репозиторий, но здесь
-для наглядности оставил их.
+I usually avoid including generated files in the git repository,
+but here they are included for demonstration purposes.
 
-## Лицензия
+## License
 
-Начиная с коммита adba913 (не включительно), этот проект распространяется под лицензией MIT. Подробности смотреть в файле [LICENSE](LICENSE).
+Starting from commit adba913 (exclusive), this project is distributed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
 
-Весь код до коммита adba913 (включительно) распространялся под лицензией GNU GPLv3.
+All code up to and including commit adba913 was distributed under the GNU GPLv3.
 
 ---
 
-Возможно, вы искали SC Editor или информацию о нём, если это так,
-то [вам сюда](https://github.com/danila-schelkov/sc-editor).
+You might have been looking for SC Editor or information about it;
+if so, [follow this link](https://github.com/danila-schelkov/sc-editor).
 
-Если у вас возникнут вопросы или предложения, пожалуйста, создайте Issue.
+If you have any questions or suggestions, please create an Issue.
