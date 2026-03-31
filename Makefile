@@ -5,11 +5,15 @@ else
 endif
 
 .PHONY: all
-all: clean build
+all: clean flatbuffers build
 
 .PHONY: build
 build:
 	${GRADLE_EXECUTABLE} jar
+
+.PHONY: flatbuffers
+flatbuffers:
+	${GRADLE_EXECUTABLE} createFlatBuffers
 
 .PHONY: clean
 clean:
