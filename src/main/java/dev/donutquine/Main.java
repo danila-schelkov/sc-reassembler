@@ -1,5 +1,10 @@
 package dev.donutquine;
 
+import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
 import dev.donutquine.swf.Export;
 import dev.donutquine.swf.SupercellSWF;
 import dev.donutquine.swf.exceptions.LoadingFaultException;
@@ -14,14 +19,9 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import java.lang.management.ManagementFactory;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Stream;
-
 public class Main {
+    private static final String REASSEMBLED_DEFAULT_NAME = "reassembled";
+
     private static final boolean TRACK_MEMORY = true;
 
     public static void main(String[] args) throws Exception {
@@ -30,7 +30,7 @@ public class Main {
                 .description("Reassemble SC file to SC of version 1, containing only needed export names.");
 
         parser.addArgument("-f", "--files").nargs("*").help("Files to be reassembled");
-        parser.addArgument("-d", "--directory").help("Directory of files to be reassembled");
+        parser.addArgument("-o", "--output").help("Output directory for reassembled files");
         parser.addArgument("-l", "--lowres").action(Arguments.storeTrue()).help("Prefer low resolution even if highres exists");
 
         if (args.length == 0) {
@@ -48,26 +48,27 @@ public class Main {
 
         boolean preferLowres = ns.getBoolean("lowres");
 
-        Stream<Path> scFiles;
-        String directory = ns.getString("directory");
-        if (directory != null) {
-            scFiles = Files.list(Paths.get(directory));
-        } else {
-            List<String> files = ns.getList("files");
-            if (files == null) {
-                throw new RuntimeException("Missing files");
-            }
-
-            scFiles = files.stream().map(Paths::get);
+        List<String> files = ns.getList("files");
+        if (files == null) {
+            throw new RuntimeException("Missing files");
         }
 
+        String output = ns.getString("output");
+        if (output == null) {
+            output = REASSEMBLED_DEFAULT_NAME;
+        }
+
+        Path outputPath = Path.of(output);
+        outputPath.toFile().mkdirs();
+
+        Stream<Path> scFiles = files.stream().map(Paths::get);
         scFiles = scFiles.filter(path -> path.toFile().isFile());
 
-        scFiles.forEach(filepath -> handleFile(filepath, preferLowres));
+        scFiles.forEach(filepath -> handleFile(filepath, outputPath, preferLowres));
         scFiles.close();
     }
 
-    private static void handleFile(Path filepath, boolean preferLowres) {
+    private static void handleFile(Path filepath, Path outputPath, boolean preferLowres) {
         String filename = filepath.getFileName().toString();
         String basename = filename.substring(0, filename.lastIndexOf('.'));
 
@@ -100,10 +101,7 @@ public class Main {
 
         reassembler.recalculateIds();
 
-        Path directory = filepath.toAbsolutePath().getParent();
-        Path reassembled = directory.resolve("reassembled");
-        reassembled.toFile().mkdirs();
-        String outputFilepath = reassembled.resolve(basename + ".sc").toString();
+        String outputFilepath = outputPath.resolve(basename + ".sc").toString();
 
         reassembledSwf.save(outputFilepath, Main::setProgress);
         System.out.printf("Saved as %s\n", outputFilepath);

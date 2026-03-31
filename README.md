@@ -38,23 +38,18 @@ The main purpose of the project is to downgrade SC2 files and save them in the o
 
 Available options:
 
-- `--exports <text file name>`: specify a file with the required export names.
-
-- `--negate`: if this flag is set, the exports listed in the exports file will be excluded
-  from the output file instead of being added to it.
-
 - `--files <path>`: specify the path to the input SC or SC2 file.
 
-- `--directory <path>`: specify the path to a folder with the required SC files.
+- `--output <path>`: specify the path to a folder for output files.
 
 Example usage:
 
 ```bash
-java -jar build/libs/sc-reassembler.jar --files path/to/input.sc --exports exports.txt
+java -jar build/libs/sc-reassembler.jar --files path/to/input.sc
 ```
 
 After running this command, a folder named `reassembled` will appear next to `path/to/input.sc`,
-containing the new SC file. It will include only the exports listed in `exports.txt`.
+containing the new SC file.
 
 ## Dependencies
 
