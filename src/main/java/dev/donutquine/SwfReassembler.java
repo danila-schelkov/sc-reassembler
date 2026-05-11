@@ -74,20 +74,27 @@ public class SwfReassembler {
     }
 
     private void addMatrices(SupercellSWF swf, MovieClipOriginal movieClip) {
-        ScMatrixBank matrixBank = swf.getMatrixBank(movieClip.getMatrixBankIndex());
+        ScMatrixBank inlineMatrixBank = movieClip.getInlineMatrixBank();
+        ScMatrixBank matrixBank = inlineMatrixBank == null ? swf.getMatrixBank(movieClip.getMatrixBankIndex()) : inlineMatrixBank;
 
         List<Matrix2x3> matrices = new ArrayList<>();
         List<ColorTransform> colorTransforms = new ArrayList<>();
 
-        for (MovieClipFrame frame : movieClip.getFrames()) {
+        List<MovieClipFrame> originalFrames = movieClip.getFrames();
+        List<MovieClipFrame> frames = originalFrames;
+
+        for (MovieClipFrame frame : frames) {
             List<MovieClipFrameElement> elements = frame.getElements();
             for (MovieClipFrameElement element : elements) {
-                if (element.matrixIndex() != 0xFFFF) {
-                    matrices.add(matrixBank.getMatrix(element.matrixIndex()));
+                int matrixIndex = element.matrixIndex();
+                int colorTransformIndex = element.colorTransformIndex();
+
+                if ((inlineMatrixBank != null && matrixIndex != -1) || matrixIndex != 0xFFFF) {
+                    matrices.add(matrixBank.getMatrix(matrixIndex));
                 }
 
-                if (element.colorTransformIndex() != 0xFFFF) {
-                    colorTransforms.add(matrixBank.getColorTransform(element.colorTransformIndex()));
+                if ((inlineMatrixBank != null && colorTransformIndex != -1) || colorTransformIndex != 0xFFFF) {
+                    colorTransforms.add(matrixBank.getColorTransform(colorTransformIndex));
                 }
             }
         }
@@ -98,8 +105,8 @@ public class SwfReassembler {
         List<ColorTransform> absentColorTransforms = new ArrayList<>(colorTransforms);
         absentColorTransforms.removeIf(currentColorTransforms::containsKey);
 
-        boolean notEnoughSpaceForMatrix = 0xFFFF - currentMatrixBank.getMatrixCount() < absentMatrices.size();
-        boolean notEnoughSpaceForColors = 0xFFFF - currentMatrixBank.getColorTransformCount() < absentColorTransforms.size();
+        boolean notEnoughSpaceForMatrix = ScMatrixBank.MAX_MATRIX_CAPACITY - currentMatrixBank.getMatrixCount() < absentMatrices.size();
+        boolean notEnoughSpaceForColors = ScMatrixBank.MAX_COLOR_CAPACITY - currentMatrixBank.getColorTransformCount() < absentColorTransforms.size();
         if (notEnoughSpaceForMatrix || notEnoughSpaceForColors) {
             currentMatrixBankIndex = (short) reassembledSwf.getMatrixBankCount();
             currentMatrixBank = new ScMatrixBank();
@@ -130,26 +137,34 @@ public class SwfReassembler {
             currentMatrixBank.addColorTransform(colorTransform);
         }
 
-        for (MovieClipFrame frame : movieClip.getFrames()) {
+        for (MovieClipFrame frame : frames) {
             List<MovieClipFrameElement> newElements = new ArrayList<>();
 
             for (MovieClipFrameElement element : frame.getElements()) {
+                int childIndex = element.childIndex();
+                int matrixIndex = element.matrixIndex();
+                int colorTransformIndex = element.colorTransformIndex();
+
                 int newMatrixIndex = 0xFFFF;
-                if (element.matrixIndex() != 0xFFFF) {
-                    Matrix2x3 matrix = matrixBank.getMatrix(element.matrixIndex());
+                if ((inlineMatrixBank != null && matrixIndex != -1) || matrixIndex != 0xFFFF) {
+                    Matrix2x3 matrix = matrixBank.getMatrix(matrixIndex);
                     newMatrixIndex = currentMatrices.get(matrix);
                 }
 
                 int newColorIndex = 0xFFFF;
-                if (element.colorTransformIndex() != 0xFFFF) {
-                    ColorTransform colorTransform = matrixBank.getColorTransform(element.colorTransformIndex());
+                if ((inlineMatrixBank != null && colorTransformIndex != -1) || colorTransformIndex != 0xFFFF) {
+                    ColorTransform colorTransform = matrixBank.getColorTransform(colorTransformIndex);
                     newColorIndex = currentColorTransforms.get(colorTransform);
                 }
 
-                newElements.add(new MovieClipFrameElement(element.childIndex(), newMatrixIndex, newColorIndex));
+                newElements.add(new MovieClipFrameElement(childIndex, newMatrixIndex, newColorIndex));
             }
 
             frame.setElements(newElements);
+        }
+
+        if (inlineMatrixBank != null) {
+            movieClip.setInlineMatrixBank(null);
         }
 
         movieClip.setMatrixBankIndex(currentMatrixBankIndex);
