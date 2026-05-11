@@ -7,6 +7,7 @@ import dev.donutquine.swf.shapes.ShapeOriginal;
 import dev.donutquine.swf.textfields.TextFieldOriginal;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SwfReassembler {
     private final SupercellSWF reassembledSwf;
@@ -81,11 +82,13 @@ public class SwfReassembler {
         List<ColorTransform> colorTransforms = new ArrayList<>();
 
         List<MovieClipFrame> originalFrames = movieClip.getFrames();
-        List<MovieClipFrame> frames = originalFrames;
+        List<MovieClipFrame> frames = originalFrames.stream().filter((frame) -> frame.getLabel() != null && !frame.getLabel().isEmpty()).collect(Collectors.toList());
+        if (frames.isEmpty() && !originalFrames.isEmpty()) {
+            frames.add(originalFrames.getLast());
+        }
 
         for (MovieClipFrame frame : frames) {
-            List<MovieClipFrameElement> elements = frame.getElements();
-            for (MovieClipFrameElement element : elements) {
+            for (MovieClipFrameElement element : frame.getElements()) {
                 int matrixIndex = element.matrixIndex();
                 int colorTransformIndex = element.colorTransformIndex();
 
@@ -162,6 +165,9 @@ public class SwfReassembler {
 
             frame.setElements(newElements);
         }
+
+        originalFrames.clear();
+        originalFrames.addAll(frames);
 
         if (inlineMatrixBank != null) {
             movieClip.setInlineMatrixBank(null);
